@@ -1,7 +1,7 @@
 # Claude Code Rust 🦀
 
 > 🚀 **Anthropic Claude Code 的 Rust 全量重构版本** - 性能提升 **2.5x**，体积减少 **97%**，零依赖原生安全
-,
+
 <div align="center">
 
 [![Rust](https://img.shields.io/badge/Rust-1.75%2B-orange?logo=rust&logoColor=white)](https://www.rust-lang.org/)
@@ -177,14 +177,12 @@
 
 ---
 
----
-
 ## 🏗️ 架构设计
 
 ```
 claude-code-rust/
 ├── src/
-│   ├── api/              # API 客户端 (支持 Anthropic/DashScope)
+│   ├── api/              # API 客户端 (支持 Anthropic/DeepSeek)
 │   ├── cli/              # CLI 命令解析
 │   │   ├── args.rs       # 参数定义
 │   │   ├── commands.rs   # 命令实现
@@ -194,23 +192,45 @@ claude-code-rust/
 │   │   ├── settings.rs   # 全局设置
 │   │   └── mcp_config.rs # MCP 配置
 │   ├── mcp/              # MCP 协议实现
+│   │   ├── server.rs     # MCP 服务器
+│   │   ├── tools.rs      # 工具注册
+│   │   ├── resources.rs  # 资源管理
+│   │   ├── prompts.rs    # 提示词系统
+│   │   └── sampling.rs   # 采样支持
 │   ├── memory/           # 内存/会话管理
+│   │   ├── session.rs    # 会话管理
+│   │   ├── history.rs    # 历史记录
+│   │   ├── context.rs    # 上下文维护
+│   │   ├── storage.rs    # 持久化存储
+│   │   └── consolidation.rs # 内存整合
 │   ├── plugins/          # 插件系统
+│   │   ├── registry.rs   # 插件注册
+│   │   ├── loader.rs     # 插件加载
+│   │   ├── commands.rs   # 自定义命令
+│   │   ├── hooks.rs      # 钩子系统
+│   │   └── isolation.rs  # 插件隔离
 │   ├── services/         # 服务层
+│   │   ├── agents.rs     # 内置代理
+│   │   ├── auto_dream.rs # AutoDream
+│   │   ├── voice.rs      # 语音输入
+│   │   ├── magic_docs.rs # Magic Docs
+│   │   ├── team_memory_sync.rs # 团队记忆同步
+│   │   └── plugin_marketplace.rs # 插件市场
+│   ├── advanced/         # 高级功能
+│   │   ├── ssh.rs        # SSH 连接
+│   │   ├── remote.rs     # 远程调用
+│   │   └── project_init.rs # 项目初始化
 │   ├── state/            # 状态管理
 │   ├── terminal/         # 终端交互
 │   ├── tools/            # 工具实现
-│   │   ├── file_read.rs  # 文件读取
-│   │   ├── file_edit.rs  # 文件编辑
-│   │   ├── file_write.rs # 文件写入
-│   │   ├── search.rs     # 文件搜索
-│   │   ├── list_files.rs # 目录列表
-│   │   └── execute_command.rs # 命令执行
-│   ├── utils/            # 工具函数
 │   ├── voice/            # 语音输入
 │   ├── lib.rs            # 库入口
 │   └── main.rs           # 主入口
+├── scripts/              # 安装脚本
+│   ├── install-windows.ps1
+│   └── install-linux.sh
 ├── Cargo.toml            # Rust 配置
+├── INSTALL.md            # 安装指南
 └── README.md             # 本文档
 ```
 
@@ -218,9 +238,45 @@ claude-code-rust/
 
 ## 🚀 快速开始
 
+### 系统要求
+
+- **Rust**: 1.75+ (从 [rustup.rs](https://rustup.rs/) 安装)
+- **Git**: 用于克隆仓库
+- **操作系统**: Windows / Linux / macOS
+
 ### 安装
 
-#### 方式一：从源码编译
+#### 方式一：使用安装脚本 ⚡ **推荐**
+
+**Windows (PowerShell):**
+```powershell
+# 克隆仓库
+git clone https://github.com/lorryjovens-hub/claude-code-rust.git
+cd claude-code-rust
+
+# 运行安装脚本（默认安装到临时目录）
+Set-ExecutionPolicy RemoteSigned -Scope CurrentUser -Force
+.\scripts\install-windows.ps1
+
+# 或指定安装到D盘
+.\scripts\install-windows.ps1 -InstallDir "D:\claude-code\install"
+```
+
+**Linux / macOS:**
+```bash
+# 克隆仓库
+git clone https://github.com/lorryjovens-hub/claude-code-rust.git
+cd claude-code-rust
+
+# 运行安装脚本
+chmod +x ./scripts/install-linux.sh
+./scripts/install-linux.sh
+
+# 或指定安装目录
+./scripts/install-linux.sh --install-dir "/opt/claude-code"
+```
+
+#### 方式二：手动编译
 
 ```bash
 # 克隆仓库
@@ -231,62 +287,35 @@ cd claude-code-rust
 cargo build --release
 
 # 可执行文件位置
-./target/release/claude-code.exe
+./target/release/claude-code
 ```
 
-#### 方式二：直接下载
+#### 方式三：指定编译目录（解决磁盘空间问题）
 
-从 [Releases](https://github.com/lorryjovens-hub/claude-code-rust/releases) 页面下载预编译的二进制文件。
-
-#### 方式三：自动化 CLI 安装 ⚡ **推荐**
-
-我们提供了跨平台的自动化安装脚本，可以自动检测系统、下载最新版本、配置 PATH。
-
-**Windows (PowerShell):**
-```powershell
-# 运行安装脚本
-irm https://raw.githubusercontent.com/lorryjovens-hub/claude-code-rust/master/install.ps1 | iex
-
-# 或指定安装路径
-Invoke-WebRequest -Uri "https://raw.githubusercontent.com/lorryjovens-hub/claude-code-rust/master/install.ps1" -OutFile "install.ps1"
-.\install.ps1 -Path "C:\Program Files\claude-code"
-```
-
-**Linux / macOS:**
 ```bash
-# 自动检测系统并安装
-curl -sSL https://raw.githubusercontent.com/lorryjovens-hub/claude-code-rust/master/install-unix.sh | bash
+# 使用D盘作为编译目录
+cargo build --release --target-dir "D:\claude-code\target"
 
-# 或指定安装路径
-bash <(curl -sSL https://raw.githubusercontent.com/lorryjovens-hub/claude-code-rust/master/install-unix.sh) --path ~/.local/bin
+# 可执行文件位置
+D:\claude-code\target\release\claude-code.exe
 ```
-
-**功能特性:**
-- ✅ 自动检测操作系统和架构 (Linux/macOS/Windows, x86_64/aarch64)
-- ✅ 交互式选择安装路径，支持多个选项
-- ✅ 自动从 GitHub Releases 下载最新版本
-- ✅ 支持 PATH 自动配置
-- ✅ 安装完成后自动验证
-- ✅ 色彩输出，用户友好的提示信息
-
-**环境要求:**
-- Windows: PowerShell 5.0+ (Win10/11 内置)
-- Linux/macOS: Bash 4.0+, curl, tar
 
 ### 配置 API
 
 ```bash
-# 方式 1: 环境变量 (推荐)
-export ANTHROPIC_API_KEY="your-api-key"
-export API_BASE_URL="https://api.anthropic.com"
+# 方式 1: 使用命令行配置（推荐）
+claude-code config set api_key "your-api-key"
+claude-code config set base_url "https://api.deepseek.com"
+claude-code config set model "deepseek-reasoner"
 
-# 方式 2: 阿里云 DashScope
-export DASHSCOPE_API_KEY="your-dashscope-key"
-export API_BASE_URL="https://coding.dashscope.aliyuncs.com/v1"
+# 方式 2: 环境变量
+export DEEPSEEK_API_KEY="your-api-key"
+export API_BASE_URL="https://api.deepseek.com"
 
-# 方式 3: 配置文件
-claude-code config set model sonnet
-claude-code config show
+# 方式 3: 配置文件 (.env)
+# DEEPSEEK_API_KEY=your-api-key
+# API_BASE_URL=https://api.deepseek.com
+# CLAUDE_MODEL=deepseek-reasoner
 ```
 
 ### 使用示例
@@ -295,6 +324,9 @@ claude-code config show
 # 查看版本
 claude-code --version
 
+# 查看帮助
+claude-code --help
+
 # 启动 REPL 交互模式
 claude-code repl
 
@@ -302,11 +334,11 @@ claude-code repl
 claude-code query --prompt "分析这个项目的结构"
 
 # 初始化新项目
-claude-code init --name my-project
+claude-code init --name my-project --template rust
 
 # 管理配置
 claude-code config show
-claude-code config set model opus
+claude-code config set model deepseek-reasoner
 claude-code config reset
 
 # MCP 服务器管理
@@ -316,6 +348,16 @@ claude-code mcp add filesystem --path /path/to/dir
 # 内存管理
 claude-code memory status
 claude-code memory export --output memories.json
+
+# 插件管理
+claude-code plugin list
+claude-code plugin install my-plugin
+
+# 语音输入模式
+claude-code voice
+
+# 运行压力测试
+claude-code stress-test
 ```
 
 ---
@@ -381,6 +423,8 @@ Overall Performance Improvement: 60%
 | 终端 UI | crossterm + ratatui | 0.27/0.26 | TUI 界面 |
 | 文件系统 | walkdir + glob | 2.5/0.3 | 文件操作 |
 | 配置管理 | config + toml | 0.14/0.8 | 配置解析 |
+| 内存缓存 | lru + dashmap | 0.12/5.5 | 缓存管理 |
+| 加密 | sha2 + jsonwebtoken | 0.10/9.3 | 安全认证 |
 
 ---
 
@@ -430,6 +474,16 @@ Overall Performance Improvement: 60%
 - [x] 插件系统架构
 - [x] 语音输入模式
 - [x] 会话管理
+- [x] AutoDream 服务
+- [x] Magic Docs 服务
+- [x] 团队记忆同步
+- [x] 插件市场
+- [x] 内置代理系统
+- [x] SSH 连接支持
+- [x] 远程调用能力
+- [x] 项目初始化
+- [x] 安装脚本
+- [x] 压力测试框架
 
 ### 进行中 🚧
 - [ ] API 流式响应优化
@@ -438,7 +492,7 @@ Overall Performance Improvement: 60%
 ### 计划中 📋
 - [ ] WebAssembly 支持
 - [ ] GUI 版本 (egui/iced)
-- [ ] 插件市场
+- [ ] 插件市场 Web 界面
 - [ ] 多语言支持
 
 ---
