@@ -10,6 +10,7 @@
 //! - Planning tools: Plan mode for strategic thinking
 //! - Productivity tools: Brief, TodoWrite, ToolSearch
 //! - Worktree tools: Git worktree management
+//! - Delegation tools: Multi-agent parallel task execution
 
 pub mod worker;
 pub mod team;
@@ -34,6 +35,7 @@ pub mod task_tools;
 pub mod send_message;
 pub mod mcp_tools;
 pub mod skill;
+pub mod delegation;
 
 pub use worker::{WorkerTool, WorkerState};
 pub use team::{TeamTool, Team, TeamTask};
@@ -58,3 +60,4 @@ pub use task_tools::{TaskCreateTool, TaskGetTool, TaskListTool, TaskUpdateTool, 
 pub use send_message::{SendMessageTool, Message, MessageStore, SharedMessageStore, create_shared_message_store, get_message_store};
 pub use mcp_tools::{ListMcpResourcesTool, ReadMcpResourceTool, McpAuthTool, RemoteTriggerTool, SyntheticOutputTool, McpServer, McpStore, SharedMcpStore, create_shared_mcp_store, get_mcp_store};
 pub use skill::{SkillTool, Skill, SkillCategory, SkillStore, SharedSkillStore, create_shared_skill_store, get_skill_store};
+pub use delegation::{DelegationTool, DelegateTaskInput, DelegateTaskOutput, DelegateSubTask, TaskSummary, DelegationConfig};
